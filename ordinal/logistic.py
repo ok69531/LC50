@@ -3,7 +3,6 @@ from utils import *
 
 import time
 import random
-import openpyxl
 import warnings
 
 import pandas as pd
@@ -11,10 +10,11 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+from sklearn.linear_model import LogisticRegression
+from statsmodels.miscmodels.ordinal_model import OrderedModel
+
 import scipy.stats as stats
 from sklearn.metrics import classification_report
-
-from statsmodels.miscmodels.ordinal_model import OrderedModel
 
 warnings.filterwarnings("ignore")
 
@@ -68,8 +68,6 @@ print('test 범주에 포함된 데이터의 수\n',
 '''
       Logistic Regression with mg/l data
 '''
-from sklearn.linear_model import LogisticRegression
-
 params_dict = {
       'random_state': [0], 
       'penalty': ['l1', 'l2'],
@@ -188,7 +186,7 @@ plt.close()
 ppm_logit = LogisticRegression(
       random_state = 0,
       penalty = 'l2',
-      C = 3.5,
+      C = 0.5,
       multi_class = 'multinomial',
       solver = 'saga'
 )
