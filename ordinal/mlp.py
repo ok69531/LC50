@@ -1,4 +1,23 @@
 #%%
+#%%
+from utils import *
+
+import time
+import random
+import warnings
+
+import pandas as pd
+import numpy as np
+
+import matplotlib.pyplot as plt
+
+import scipy.stats as stats
+from sklearn.metrics import classification_report
+
+warnings.filterwarnings("ignore")
+
+
+#%%
 import tensorflow as tf
 import tensorflow.keras as K
 from tensorflow.keras import layers
@@ -10,6 +29,16 @@ from tensorflow.python.client import device_lib
 print('=========================================')
 print(device_lib.list_local_devices())
 tf.debugging.set_log_device_placement(False)
+
+
+
+#%%
+path = 'C:/Users/SOYOUNG/Desktop/github/LC50/data/'
+train_mgl, train_mgl_fingerprints, train_mgl_y = train_mgl_load(path) 
+train_ppm, train_ppm_fingerprints, train_ppm_y = train_ppm_load(path)
+
+test_mgl, test_mgl_fingerprints, test_mgl_y = test_mgl_load(path)
+test_ppm, test_ppm_fingerprints, test_ppm_y = test_ppm_load(path)
 
 
 #%%
