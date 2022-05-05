@@ -192,8 +192,8 @@ ppm_logit = LogisticRegression(
 )
 ppm_logit.fit(train_ppm_fingerprints, train_ppm_y.category)
 
-train_ppm_pred = mgl_logit.predict(train_ppm_fingerprints)
-ppm_logit_pred = mgl_logit.predict(test_ppm_fingerprints)
+train_ppm_pred = ppm_logit.predict(train_ppm_fingerprints)
+ppm_logit_pred = ppm_logit.predict(test_ppm_fingerprints)
 
 print('train results: \n', pd.crosstab(train_ppm_y.category, train_ppm_pred, rownames = ['true'], colnames = ['pred']))
 print("\nkendall's tau = ", stats.kendalltau(train_ppm_y.category, train_ppm_pred))
