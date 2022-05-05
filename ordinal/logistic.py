@@ -222,3 +222,48 @@ ppm_ord_pred = np.argmax(np.array(ppm_pred_prob), axis = 1)
 print("kendall's tau = ", stats.kendalltau(test_ppm_y.category, ppm_ord_pred))
 print(classification_report(test_ppm_y.category, ppm_ord_pred, digits = 5))
 
+
+#%%
+'''
+      mg/l binary
+'''
+from sklearn.metrics import cohen_kappa_score, roc_auc_score
+
+mgl_binary = pd.DataFrame({
+   'y': [0 if i != 1 else 1 for i in test_mgl_y.category],
+   'logit_pred': [0 if i != 1 else 1 for i in mgl_logit_pred],
+   'ord_pred': [0 if i != 1 else 1 for i in mgl_ord_pred],
+})
+
+
+print(pd.crosstab(mgl_binary.y, mgl_binary.logit_pred, rownames = ['true'], colnames = ['pred']))
+print('cohens kappa = ', cohen_kappa_score(mgl_binary.y, mgl_binary.logit_pred))
+print('auc = ', roc_auc_score(mgl_binary.y, mgl_binary.logit_pred))
+print(classification_report(mgl_binary.y, mgl_binary.logit_pred, digits = 5))
+
+print(pd.crosstab(mgl_binary.y, mgl_binary.ord_pred, rownames = ['true'], colnames = ['pred']))
+print('cohens kappa = ', cohen_kappa_score(mgl_binary.y, mgl_binary.ord_pred))
+print('auc = ', roc_auc_score(mgl_binary.y, mgl_binary.ord_pred))
+print(classification_report(mgl_binary.y, mgl_binary.ord_pred, digits = 5))
+
+
+#%%
+'''
+      ppm binary
+'''
+ppm_binary = pd.DataFrame({
+   'y': [0 if i != 1 else 1 for i in test_ppm_y.category],
+   'logit_pred': [0 if i != 1 else 1 for i in ppm_logit_pred],
+   'ord_pred': [0 if i != 1 else 1 for i in ppm_ord_pred],
+})
+
+
+print(pd.crosstab(ppm_binary.y, ppm_binary.logit_pred, rownames = ['true'], colnames = ['pred']))
+print('cohens kappa = ', cohen_kappa_score(ppm_binary.y, ppm_binary.logit_pred))
+print('auc = ', roc_auc_score(ppm_binary.y, ppm_binary.logit_pred))
+print(classification_report(ppm_binary.y, ppm_binary.logit_pred, digits = 5))
+
+print(pd.crosstab(ppm_binary.y, ppm_binary.ord_pred, rownames = ['true'], colnames = ['pred']))
+print('cohens kappa = ', cohen_kappa_score(ppm_binary.y, ppm_binary.ord_pred))
+print('auc = ', roc_auc_score(ppm_binary.y, ppm_binary.ord_pred))
+print(classification_report(ppm_binary.y, ppm_binary.ord_pred, digits = 5))
