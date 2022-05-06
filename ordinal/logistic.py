@@ -132,19 +132,130 @@ print('\n', classification_report(test_mgl_y.category, mgl_logit_pred, digits = 
 '''
       Ordinal Logistic Regression with mg/l data
 '''
-mgl_ordinal = OrderedModel(
-      train_mgl_y.category,
+# mgl_ordinal = OrderedModel(
+#       train_mgl_y.category,
+#       train_mgl_fingerprints, 
+#       distr = 'logit')
+
+# mgl_ordinal_fit = mgl_ordinal.fit(method = 'lbfgs', maxiter = 1000)
+# mgl_ordinal_fit.summary()
+
+# mgl_pred_prob = mgl_ordinal_fit.predict(test_mgl_fingerprints)
+# mgl_ord_pred = np.argmax(np.array(mgl_pred_prob), axis = 1)
+
+# print("kendall's tau = ", stats.kendalltau(test_mgl_y.category, mgl_ord_pred))
+# print(classification_report(test_mgl_y.category, mgl_ord_pred, digits = 5))
+
+
+#%%
+from sklearn.base import clone, BaseEstimator, ClassifierMixin
+from sklearn.utils.validation import check_X_y, check_is_fitted, check_array
+from sklearn.utils.multiclass import check_classification_targets
+
+class LogitOrdinalClassifier(BaseEstimator, ClassifierMixin):
+    def __init__(
+        self, 
+        penalty='l2', 
+        *, 
+        dual=False, 
+        tol=0.0001, 
+        C=1.0, 
+        fit_intercept=True, 
+        intercept_scaling=1, 
+        class_weight=None, 
+        random_state=None, 
+        solver='lbfgs', 
+        max_iter=100, 
+        multi_class='auto', 
+        verbose=0, 
+        warm_start=False, 
+        n_jobs=None, 
+        l1_ratio=None
+    ):
+        self.penalty = penalty 
+        self.dual = dual
+        self.tol = tol
+        self.C = C
+        self.fit_intercept = fit_intercept 
+        self.intercept_scaling = intercept_scaling
+        self.class_weight = class_weight
+        self.random_state = random_state
+        self.solver = solver
+        self.max_iter = max_iter
+        self.multi_class = multi_class
+        self.verbose = verbose
+        self.warm_start = warm_start
+        self.n_jobs = n_jobs
+        self.l1_ratio = l1_ratio
+        
+    def fit(self, X, y):
+        X, y = check_X_y(X, y)
+        check_classification_targets(y)
+        
+        self.clf_ = LogisticRegression(**self.get_params())
+        self.clfs_ = {}
+        self.classes_ = np.sort(np.unique(y))
+        if self.classes_.shape[0] > 2:
+            for i in range(self.classes_.shape[0]-1):
+                # for each k - 1 ordinal value we fit a binary classification problem
+                binary_y = (y > self.classes_[i]).astype(np.uint8)
+                clf = clone(self.clf_)
+                clf.fit(X, binary_y)
+                self.clfs_[i] = clf
+        return self
+    
+    def predict_proba(self, X):
+        X = check_array(X)
+        check_is_fitted(self, ['classes_', 'clf_', 'clfs_'])
+        
+        clfs_predict = {k:self.clfs_[k].predict_proba(X) for k in self.clfs_}
+        predicted = []
+        for i,y in enumerate(self.classes_):
+            if i == 0:
+                # V1 = 1 - Pr(y > V1)
+                predicted.append(1 - clfs_predict[y][:,1])
+            elif y in clfs_predict:
+                # Vi = Pr(y > Vi-1) - Pr(y > Vi)
+                 predicted.append(clfs_predict[y-1][:,1] - clfs_predict[y][:,1])
+            else:
+                # Vk = Pr(y > Vk-1)
+                predicted.append(clfs_predict[y-1][:,1])
+        return np.vstack(predicted).T
+    
+    def predict(self, X):
+        X = check_array(X)
+        check_is_fitted(self, ['classes_', 'clf_', 'clfs_'])
+        
+        return np.argmax(self.predict_proba(X), axis=1)
+
+
+#%%
+mgl_ord_result = CV(
       train_mgl_fingerprints, 
-      distr = 'logit')
+      train_mgl_y, 
+      RFOrdinalClassifier,
+      params)
 
-mgl_ordinal_fit = mgl_ordinal.fit(method = 'lbfgs', maxiter = 1000)
-mgl_ordinal_fit.summary()
+mgl_ord_result.iloc[mgl_ord_result.val_macro_f1.argmax(axis = 0)]
+mgl_ord_result.iloc[mgl_ord_result.val_tau.argmax(axis = 0)]
 
-mgl_pred_prob = mgl_ordinal_fit.predict(test_mgl_fingerprints)
-mgl_ord_pred = np.argmax(np.array(mgl_pred_prob), axis = 1)
+
+#%%
+mgl_ordrf = RFOrdinalClassifier(
+    random_state = 0,
+    n_estimators = 60,
+    max_features = 'auto',
+    min_samples_split = 3
+)
+
+mgl_ordrf.fit(train_mgl_fingerprints, train_mgl_y.category)
+
+mgl_ord_pred = mgl_ordrf.predict(test_mgl_fingerprints)
 
 print("kendall's tau = ", stats.kendalltau(test_mgl_y.category, mgl_ord_pred))
 print(classification_report(test_mgl_y.category, mgl_ord_pred, digits = 5))
+
+
 
 
 #%%
