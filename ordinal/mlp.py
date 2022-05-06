@@ -204,7 +204,8 @@ mgl_ord_model.compile(optimizer = adam, loss = scc, metrics = ['accuracy'])
 mgl_ord_result = mgl_ord_model.fit(train_mgl_x, mgl_train_y, epochs = 1000, batch_size = len(mgl_train_y), verbose = 1)
 # epochs = 10000
 # lr = 0.0005, epochs = 5000
-# lr = 0.0001, epochs = 1000
+# lr = 0.0001, epochs = 5000
+
 
 #%%
 mgl_ord_prob = mgl_ord_model.predict(test_mgl_x)
@@ -253,7 +254,7 @@ print('kendall tau: ', stats.kendalltau(ppm_test_y, ppm_mlp_pred3),
 tf.random.set_seed(0)
 ppm_ord_model = ord_model()
 
-adam = K.optimizers.Adam(0.005)
+adam = K.optimizers.Adam(0.001)
 scc = K.losses.SparseCategoricalCrossentropy()
 
 ppm_ord_model.compile(optimizer = adam, loss = scc, metrics = ['accuracy'])
@@ -268,3 +269,51 @@ ppm_ord_pred = np.argmax(ppm_ord_prob, axis = 1)
 
 print('kendall tau: ', stats.kendalltau(ppm_test_y, ppm_ord_pred),
       '\n', classification_report(ppm_test_y, ppm_ord_pred, digits = 5))
+
+
+#%%
+#%%
+'''
+      mg/l binary
+'''
+from sklearn.metrics import cohen_kappa_score, roc_auc_score
+
+mgl_binary = pd.DataFrame({
+   'y': [0 if i != 1 else 1 for i in test_mgl_y.category],
+   'mlp_pred': [0 if i != 1 else 1 for i in mgl_mlp_pred3],
+   'ord_pred': [0 if i != 1 else 1 for i in mgl_ord_pred],
+})
+
+
+print(pd.crosstab(mgl_binary.y, mgl_binary.mlp_pred, rownames = ['true'], colnames = ['pred']))
+print('cohens kappa = ', cohen_kappa_score(mgl_binary.y, mgl_binary.mlp_pred))
+print('auc = ', roc_auc_score(mgl_binary.y, mgl_binary.mlp_pred))
+print(classification_report(mgl_binary.y, mgl_binary.mlp_pred, digits = 5))
+
+print(pd.crosstab(mgl_binary.y, mgl_binary.ord_pred, rownames = ['true'], colnames = ['pred']))
+print('cohens kappa = ', cohen_kappa_score(mgl_binary.y, mgl_binary.ord_pred))
+print('auc = ', roc_auc_score(mgl_binary.y, mgl_binary.ord_pred))
+print(classification_report(mgl_binary.y, mgl_binary.ord_pred, digits = 5))
+
+
+#%%
+'''
+      ppm binary
+'''
+ppm_binary = pd.DataFrame({
+   'y': [0 if i != 1 else 1 for i in test_ppm_y.category],
+   'logit_pred': [0 if i != 1 else 1 for i in ppm_logit_pred],
+   'ord_pred': [0 if i != 1 else 1 for i in ppm_ord_pred],
+})
+
+
+print(pd.crosstab(ppm_binary.y, ppm_binary.logit_pred, rownames = ['true'], colnames = ['pred']))
+print('cohens kappa = ', cohen_kappa_score(ppm_binary.y, ppm_binary.logit_pred))
+print('auc = ', roc_auc_score(ppm_binary.y, ppm_binary.logit_pred))
+print(classification_report(ppm_binary.y, ppm_binary.logit_pred, digits = 5))
+
+print(pd.crosstab(ppm_binary.y, ppm_binary.ord_pred, rownames = ['true'], colnames = ['pred']))
+print('cohens kappa = ', cohen_kappa_score(ppm_binary.y, ppm_binary.ord_pred))
+print('auc = ', roc_auc_score(ppm_binary.y, ppm_binary.ord_pred))
+print(classification_report(ppm_binary.y, ppm_binary.ord_pred, digits = 5))
+
