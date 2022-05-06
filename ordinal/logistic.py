@@ -78,6 +78,7 @@ params_dict = {
 
 params = ParameterGrid(params_dict)
 
+
 #%%
 mgl_logit_result = CV(
       train_mgl_fingerprints, 
@@ -240,12 +241,15 @@ mgl_ord_result = CV(
 mgl_ord_result.iloc[mgl_ord_result.val_macro_f1.argmax(axis = 0)]
 mgl_ord_result.iloc[mgl_ord_result.val_tau.argmax(axis = 0)]
 
+mgl_l2 = mgl_ord_result[mgl_ord_result.penalty == 'l2']
+mgl_l2.iloc[mgl_l2.val_tau.argmax(axis = 0)]
+
 
 #%%
 mgl_ordlogit = LogitOrdinalClassifier(
     random_state = 0,
     penalty = 'l2',
-    C = ,
+    C = 8.5,
     multi_class = 'multinomial',
     solver = 'saga'
 )
@@ -256,7 +260,6 @@ mgl_ord_pred = mgl_ordlogit.predict(test_mgl_fingerprints)
 
 print("kendall's tau = ", stats.kendalltau(test_mgl_y.category, mgl_ord_pred))
 print(classification_report(test_mgl_y.category, mgl_ord_pred, digits = 5))
-
 
 
 
