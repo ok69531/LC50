@@ -233,7 +233,7 @@ class LogitOrdinalClassifier(BaseEstimator, ClassifierMixin):
 mgl_ord_result = CV(
       train_mgl_fingerprints, 
       train_mgl_y, 
-      RFOrdinalClassifier,
+      LogitOrdinalClassifier,
       params)
 
 mgl_ord_result.iloc[mgl_ord_result.val_macro_f1.argmax(axis = 0)]
@@ -241,16 +241,17 @@ mgl_ord_result.iloc[mgl_ord_result.val_tau.argmax(axis = 0)]
 
 
 #%%
-mgl_ordrf = RFOrdinalClassifier(
+mgl_ordlogit = LogitOrdinalClassifier(
     random_state = 0,
-    n_estimators = 60,
-    max_features = 'auto',
-    min_samples_split = 3
+    penalty = 'l2',
+    C = ,
+    multi_class = 'multinomial',
+    solver = 'saga'
 )
 
-mgl_ordrf.fit(train_mgl_fingerprints, train_mgl_y.category)
+mgl_ordlogit.fit(train_mgl_fingerprints, train_mgl_y.category)
 
-mgl_ord_pred = mgl_ordrf.predict(test_mgl_fingerprints)
+mgl_ord_pred = mgl_ordlogit.predict(test_mgl_fingerprints)
 
 print("kendall's tau = ", stats.kendalltau(test_mgl_y.category, mgl_ord_pred))
 print(classification_report(test_mgl_y.category, mgl_ord_pred, digits = 5))
@@ -319,19 +320,47 @@ print('\n', classification_report(test_ppm_y.category, ppm_logit_pred, digits = 
 '''
       Ordinal Logistic Regression with ppm data
 '''
-ppm_ordinal = OrderedModel(
-      train_ppm_y.category,
+# ppm_ordinal = OrderedModel(
+#       train_ppm_y.category,
+#       train_ppm_fingerprints, 
+#       distr = 'logit')
+
+# ppm_ordinal_fit = ppm_ordinal.fit(method = 'lbfgs', maxiter = 1000)
+# ppm_ordinal_fit.summary()
+
+# ppm_pred_prob = ppm_ordinal_fit.predict(test_ppm_fingerprints)
+# ppm_ord_pred = np.argmax(np.array(ppm_pred_prob), axis = 1)
+
+# print("kendall's tau = ", stats.kendalltau(test_ppm_y.category, ppm_ord_pred))
+# print(classification_report(test_ppm_y.category, ppm_ord_pred, digits = 5))
+
+#%%
+ppm_ord_result = CV(
       train_ppm_fingerprints, 
-      distr = 'logit')
+      train_ppm_y, 
+      LogitOrdinalClassifier,
+      params)
 
-ppm_ordinal_fit = ppm_ordinal.fit(method = 'lbfgs', maxiter = 1000)
-ppm_ordinal_fit.summary()
+ppm_ord_result.iloc[ppm_ord_result.val_macro_f1.argmax(axis = 0)]
+ppm_ord_result.iloc[ppm_ord_result.val_tau.argmax(axis = 0)]
 
-ppm_pred_prob = ppm_ordinal_fit.predict(test_ppm_fingerprints)
-ppm_ord_pred = np.argmax(np.array(ppm_pred_prob), axis = 1)
+
+#%%
+ppm_ordlogit = LogitOrdinalClassifier(
+    random_state = 0,
+    penalty = 'l2',
+    C = ,
+    multi_class = 'multinomial',
+    solver = 'saga'
+)
+
+ppm_ordlogit.fit(train_ppm_fingerprints, train_ppm_y.category)
+
+ppm_ord_pred = ppm_ordlogit.predict(test_ppm_fingerprints)
 
 print("kendall's tau = ", stats.kendalltau(test_ppm_y.category, ppm_ord_pred))
 print(classification_report(test_ppm_y.category, ppm_ord_pred, digits = 5))
+
 
 
 #%%
