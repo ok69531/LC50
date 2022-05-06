@@ -1,5 +1,4 @@
 #%%
-from sklearn.ensemble import RandomForestClassifier
 from utils import *
 
 import time
@@ -20,7 +19,7 @@ warnings.filterwarnings("ignore")
 
 
 #%%
-path = '/Users/sy/github/LC50/data/'
+path = 'C:/Users/SOYOUNG/Desktop/github/LC50/data/'
 train_mgl, train_mgl_fingerprints, train_mgl_y = train_mgl_load(path) 
 train_ppm, train_ppm_fingerprints, train_ppm_y = train_ppm_load(path)
 
@@ -62,13 +61,14 @@ params_dict = {
 
 params = ParameterGrid(params_dict)
 
+
+#%%
 mgl_rf_result = CV(
       train_mgl_fingerprints, 
       train_mgl_y, 
       RandomForestClassifier,
       params)
 
-#%%
 mgl_rf_result.iloc[mgl_rf_result.val_macro_f1.argmax(axis = 0)]
 mgl_rf_result.iloc[mgl_rf_result.val_tau.argmax(axis = 0)]
 
@@ -86,9 +86,9 @@ plt.close()
 #%%
 mgl_rf = RandomForestClassifier(
       random_state = 0,
-      n_estimators = 70,
+      n_estimators = 30,
       max_features = 'auto',
-      min_samples_split = 2
+      min_samples_split = 6
 )
 
 mgl_rf.fit(train_mgl_fingerprints, train_mgl_y.category)
@@ -111,7 +111,6 @@ print('\n', classification_report(test_mgl_y.category, mgl_rf_pred, digits = 5))
 # https://stackoverflow.com/questions/57561189/multi-class-multi-label-ordinal-classification-with-sklearn
 
 from sklearn.base import clone, BaseEstimator, ClassifierMixin
-from sklearn.metrics import accuracy_score
 from sklearn.utils.validation import check_X_y, check_is_fitted, check_array
 from sklearn.utils.multiclass import check_classification_targets
 
@@ -212,9 +211,9 @@ mgl_ord_result.iloc[mgl_ord_result.val_tau.argmax(axis = 0)]
 #%%
 mgl_ordrf = RFOrdinalClassifier(
     random_state = 0,
-    n_estimators = 60,
-    max_features = 'auto',
-    min_samples_split = 3
+    n_estimators = 35,
+    max_features = 'log2',
+    min_samples_split = 5
 )
 
 mgl_ordrf.fit(train_mgl_fingerprints, train_mgl_y.category)
@@ -253,9 +252,9 @@ ppm_rf_result.iloc[ppm_rf_result.val_tau.argmax(axis = 0)]
 #%%
 ppm_rf = RandomForestClassifier(
     random_state = 0,
-    n_estimators = 40,
-    max_features = 'auto',
-    min_samples_split = 3
+    n_estimators = 35,
+    max_features = 'log2',
+    min_samples_split = 5
 )
 
 ppm_rf.fit(train_ppm_fingerprints, train_ppm_y.category)
@@ -302,6 +301,50 @@ print("kendall's tau = ", stats.kendalltau(test_ppm_y.category, ppm_ord_pred))
 print(classification_report(test_ppm_y.category, ppm_ord_pred, digits = 5))
 
 
+#%%
+'''
+      mg/l binary
+'''
+from sklearn.metrics import cohen_kappa_score, roc_auc_score
+
+mgl_binary = pd.DataFrame({
+   'y': [0 if i != 1 else 1 for i in test_mgl_y.category],
+   'rf_pred': [0 if i != 1 else 1 for i in mgl_rf_pred],
+   'ord_pred': [0 if i != 1 else 1 for i in mgl_ord_pred],
+})
+
+
+print(pd.crosstab(mgl_binary.y, mgl_binary.rf_pred, rownames = ['true'], colnames = ['pred']))
+print('cohens kappa = ', cohen_kappa_score(mgl_binary.y, mgl_binary.rf_pred))
+print('auc = ', roc_auc_score(mgl_binary.y, mgl_binary.rf_pred))
+print(classification_report(mgl_binary.y, mgl_binary.rf_pred, digits = 5))
+
+print(pd.crosstab(mgl_binary.y, mgl_binary.ord_pred, rownames = ['true'], colnames = ['pred']))
+print('cohens kappa = ', cohen_kappa_score(mgl_binary.y, mgl_binary.ord_pred))
+print('auc = ', roc_auc_score(mgl_binary.y, mgl_binary.ord_pred))
+print(classification_report(mgl_binary.y, mgl_binary.ord_pred, digits = 5))
+
+
+#%%
+'''
+      ppm binary
+'''
+ppm_binary = pd.DataFrame({
+   'y': [0 if i != 1 else 1 for i in test_ppm_y.category],
+   'rf_pred': [0 if i != 1 else 1 for i in ppm_rf_pred],
+   'ord_pred': [0 if i != 1 else 1 for i in ppm_ord_pred],
+})
+
+
+print(pd.crosstab(ppm_binary.y, ppm_binary.rf_pred, rownames = ['true'], colnames = ['pred']))
+print('cohens kappa = ', cohen_kappa_score(ppm_binary.y, ppm_binary.rf_pred))
+print('auc = ', roc_auc_score(ppm_binary.y, ppm_binary.rf_pred))
+print(classification_report(ppm_binary.y, ppm_binary.rf_pred, digits = 5))
+
+print(pd.crosstab(ppm_binary.y, ppm_binary.ord_pred, rownames = ['true'], colnames = ['pred']))
+print('cohens kappa = ', cohen_kappa_score(ppm_binary.y, ppm_binary.ord_pred))
+print('auc = ', roc_auc_score(ppm_binary.y, ppm_binary.ord_pred))
+print(classification_report(ppm_binary.y, ppm_binary.ord_pred, digits = 5))
 
 
 
