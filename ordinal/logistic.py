@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn.linear_model import LogisticRegression
-from statsmodels.miscmodels.ordinal_model import OrderedModel
+# from statsmodels.miscmodels.ordinal_model import OrderedModel
 
 import scipy.stats as stats
 from sklearn.metrics import classification_report
@@ -78,6 +78,7 @@ params_dict = {
 
 params = ParameterGrid(params_dict)
 
+#%%
 mgl_logit_result = CV(
       train_mgl_fingerprints, 
       train_mgl_y, 
@@ -274,8 +275,8 @@ ppm_logit_result = CV(
 ppm_logit_result.iloc[ppm_logit_result.val_macro_f1.argmax(axis = 0)]
 ppm_logit_result.iloc[ppm_logit_result.val_tau.argmax(axis = 0)]
 
-ppm_l2 = ppm_logit_result[ppm_logit_result.penalty == 'l2']
-ppm_l2.iloc[ppm_l2.val_tau.argmax(axis = 0)]
+# ppm_l2 = ppm_logit_result[ppm_logit_result.penalty == 'l2']
+# ppm_l2.iloc[ppm_l2.val_tau.argmax(axis = 0)]
 
 
 #%%
@@ -297,8 +298,8 @@ plt.close()
 #%%
 ppm_logit = LogisticRegression(
       random_state = 0,
-      penalty = 'l2',
-      C = 0.5,
+      penalty = 'l1',
+      C = 1.5,
       multi_class = 'multinomial',
       solver = 'saga'
 )
@@ -320,21 +321,6 @@ print('\n', classification_report(test_ppm_y.category, ppm_logit_pred, digits = 
 '''
       Ordinal Logistic Regression with ppm data
 '''
-# ppm_ordinal = OrderedModel(
-#       train_ppm_y.category,
-#       train_ppm_fingerprints, 
-#       distr = 'logit')
-
-# ppm_ordinal_fit = ppm_ordinal.fit(method = 'lbfgs', maxiter = 1000)
-# ppm_ordinal_fit.summary()
-
-# ppm_pred_prob = ppm_ordinal_fit.predict(test_ppm_fingerprints)
-# ppm_ord_pred = np.argmax(np.array(ppm_pred_prob), axis = 1)
-
-# print("kendall's tau = ", stats.kendalltau(test_ppm_y.category, ppm_ord_pred))
-# print(classification_report(test_ppm_y.category, ppm_ord_pred, digits = 5))
-
-#%%
 ppm_ord_result = CV(
       train_ppm_fingerprints, 
       train_ppm_y, 
@@ -348,8 +334,8 @@ ppm_ord_result.iloc[ppm_ord_result.val_tau.argmax(axis = 0)]
 #%%
 ppm_ordlogit = LogitOrdinalClassifier(
     random_state = 0,
-    penalty = 'l2',
-    C = ,
+    penalty = 'l1',
+    C = 2,
     multi_class = 'multinomial',
     solver = 'saga'
 )
