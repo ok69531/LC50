@@ -12,7 +12,7 @@ from collections.abc import Iterable
 
 import scipy.stats as stats
 from sklearn.model_selection import KFold
-from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, roc_auc_score
 
 
 def Smiles2Fing(smiles):
@@ -214,4 +214,88 @@ def CV(x, y, model, params_grid):
     return(result)
 
 
+def BinaryCV(x, y, model, params_grid):
+    kf = KFold(n_splits = 5)
+    
+    result_ = []
+    metrics = ['macro_precision', 'weighted_precision', 'macro_recall', 
+               'weighted_recall', 'macro_f1', 'weighted_f1', 
+               'accuracy', 'tau', 'auc']
+    
+    train_metrics = list(map(lambda x: 'train_' + x, metrics))
+    val_metrics = list(map(lambda x: 'val_' + x, metrics))
+    
+    for i in tqdm(range(len(params_grid))):
+        train_macro_precision_, train_weighted_precision_ = [], []
+        train_macro_recall_, train_weighted_recall_ = [], []
+        train_macro_f1_, train_weighted_f1_ = [], []
+        train_accuracy_, train_tau_ = [], []
+        train_auc_ = []
+        
+        val_macro_precision_, val_weighted_precision_ = [], []
+        val_macro_recall_, val_weighted_recall_ = [], []
+        val_macro_f1_, val_weighted_f1_ = [], []
+        val_accuracy_, val_tau_ = [], []
+        val_auc_ = []
+        
+        for train_idx, val_idx in kf.split(x):
+            train_x, train_y = x.iloc[train_idx], y.category.iloc[train_idx]
+            val_x, val_y = x.iloc[val_idx], y.category.iloc[val_idx]
+            
+            clf = model(**params_grid[i])
+            clf.fit(train_x, train_y)
+            
+            train_pred = clf.predict(train_x)
+            val_pred = clf.predict(val_x)
+            
+            train_y = [0 if i != 1 else 1 for i in train_y]
+            train_pred = [0 if i != 1 else 1 for i in train_pred]
+            
+            val_y = [0 if i != 1 else 1 for i in val_y]
+            val_pred = [0 if i != 1 else 1 for i in val_pred]
+            
+            train_macro_precision_.append(precision_score(train_y, train_pred, average = 'macro'))
+            train_weighted_precision_.append(precision_score(train_y, train_pred, average = 'weighted'))
+            train_macro_recall_.append(recall_score(train_y, train_pred, average = 'macro'))
+            train_weighted_recall_.append(recall_score(train_y, train_pred, average = 'weighted'))
+            train_macro_f1_.append(f1_score(train_y, train_pred, average = 'macro'))
+            train_weighted_f1_.append(f1_score(train_y, train_pred, average = 'weighted'))
+            train_accuracy_.append(accuracy_score(train_y, train_pred))
+            train_tau_.append(stats.kendalltau(train_y, train_pred))
+            train_auc_.append(roc_auc_score(train_y, train_pred))
+
+            val_macro_precision_.append(precision_score(val_y, val_pred, average = 'macro'))
+            val_weighted_precision_.append(precision_score(val_y, val_pred, average = 'weighted'))
+            val_macro_recall_.append(recall_score(val_y, val_pred, average = 'macro'))
+            val_weighted_recall_.append(recall_score(val_y, val_pred, average = 'weighted'))
+            val_macro_f1_.append(f1_score(val_y, val_pred, average = 'macro'))
+            val_weighted_f1_.append(f1_score(val_y, val_pred, average = 'weighted'))
+            val_accuracy_.append(accuracy_score(val_y, val_pred))
+            val_tau_.append(stats.kendalltau(val_y, val_pred))
+            val_auc_.append(roc_auc_score(val_y, val_pred))
+            
+        result_.append(dict(
+            zip(list(params_grid[i].keys()) + train_metrics + val_metrics, 
+                list(params_grid[i].values()) + 
+                [np.mean(train_macro_precision_), 
+                 np.mean(train_weighted_precision_),
+                 np.mean(train_macro_recall_), 
+                 np.mean(train_weighted_recall_),
+                 np.mean(train_macro_f1_), 
+                 np.mean(train_weighted_f1_),
+                 np.mean(train_accuracy_), 
+                 np.mean(train_tau_),
+                 np.mean(train_auc_),
+                 np.mean(val_macro_precision_), 
+                 np.mean(val_weighted_precision_),
+                 np.mean(val_macro_recall_), 
+                 np.mean(val_weighted_recall_),
+                 np.mean(val_macro_f1_), 
+                 np.mean(val_weighted_f1_),
+                 np.mean(val_accuracy_), 
+                 np.mean(val_tau_),
+                 np.mean(val_auc_)])))
+        
+    result = pd.DataFrame(result_)
+    return(result)
 
