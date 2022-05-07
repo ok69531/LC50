@@ -35,88 +35,170 @@ def Smiles2Fing(smiles):
     return ms_none_idx, fingerprints
 
 
-def train_mgl_load(path):
-    train_mgl = pd.read_excel(path + 'train_mgl.xlsx', sheet_name = 'Sheet1')
+def mgl_load(data_type, path):
+    mgl = pd.read_excel(path + data_type + '_mgl.xlsx', sheet_name = 'Sheet1')
     
     # smiles to fingerprints
-    mgl_drop_idx, train_mgl_fingerprints = Smiles2Fing(train_mgl.SMILES)
-    train_mgl_y = train_mgl.value.drop(mgl_drop_idx).reset_index(drop = True)
+    mgl_drop_idx, mgl_fingerprints = Smiles2Fing(mgl.SMILES)
+    mgl_y_ = mgl.value.drop(mgl_drop_idx).reset_index(drop = True)
     
     # LC50 데이터의 범주 구성
-    train_mgl_y = pd.DataFrame(
-        {'value': train_mgl_y,
-         'category': pd.cut(train_mgl_y, 
+    mgl_y = pd.DataFrame(
+        {'value': mgl_y_,
+         'category': pd.cut(mgl_y_, 
                             bins = [0, 0.5, 2.0, 10, 20, np.infty], 
                             labels = range(5))}
         )
     # quantile 기준으로 범주 구성
     # mgl_y = pd.DataFrame({'value': mgl_y, 'category': pd.qcut(mgl_y, 5, labels = range(5))})
     
-    # ppm
-    return(train_mgl,
-           train_mgl_fingerprints, 
-           train_mgl_y)
+    return(mgl,
+           mgl_fingerprints, 
+           mgl_y)
 
 
-def train_ppm_load(path):
-    train_ppm = pd.read_excel(path + 'train_ppm.xlsx', sheet_name = 'Sheet1')
+def ppm_load(data_type, path):
+    ppm = pd.read_excel(path + data_type + '_ppm.xlsx', sheet_name = 'Sheet1')
 
-    ppm_drop_idx, train_ppm_fingerprints = Smiles2Fing(train_ppm.SMILES)
-    train_ppm_y = train_ppm.value.drop(ppm_drop_idx).reset_index(drop = True)
+    ppm_drop_idx, ppm_fingerprints = Smiles2Fing(ppm.SMILES)
+    ppm_y_ = ppm.value.drop(ppm_drop_idx).reset_index(drop = True)
     
-    train_ppm_y = pd.DataFrame(
-        {'value': train_ppm_y,
-         'category': pd.cut(train_ppm_y,
+    ppm_y = pd.DataFrame(
+        {'value': ppm_y_,
+         'category': pd.cut(ppm_y_,
                             bins = [0, 100, 500, 2500, 20000, np.infty], 
                             labels = range(5))}
         )
     # ppm_y = pd.DataFrame({'value': ppm_y, 'category': pd.qcut(ppm_y, 5, labels = range(5))})
     
-    return(train_ppm,
-           train_ppm_fingerprints,
-           train_ppm_y)
+    return(ppm,
+           ppm_fingerprints,
+           ppm_y)
 
 
-def test_mgl_load(path):
-    # mg/l
-    test_mgl = pd.read_excel(path + 'test_mgl.xlsx', sheet_name = 'Sheet1')
+def binary_mgl_load(data_type, path):
+    mgl = pd.read_excel(path + data_type + '_mgl.xlsx', sheet_name = 'Sheet1')
     
     # smiles to fingerprints
-    mgl_drop_idx, test_mgl_fingerprints = Smiles2Fing(test_mgl.SMILES)
-    test_mgl_y = test_mgl.value.drop(mgl_drop_idx).reset_index(drop = True)
+    mgl_drop_idx, mgl_fingerprints = Smiles2Fing(mgl.SMILES)
+    mgl_y_ = mgl.value.drop(mgl_drop_idx).reset_index(drop = True)
     
     # LC50 데이터의 범주 구성
-    test_mgl_y = pd.DataFrame(
-        {'value': test_mgl_y,
-         'category': pd.cut(test_mgl_y, 
-                            bins = [0, 0.5, 2.0, 10, 20, np.infty], 
-                            labels = range(5))}
+    mgl_y = pd.DataFrame(
+        {'value': mgl_y_,
+         'category': pd.cut(mgl_y_, 
+                            bins = [0, 0.5, np.infty], 
+                            labels = range(2))}
         )
     # quantile 기준으로 범주 구성
-    # mgl_y = pd.DataFrame({'value': test_mgl_y, 'category': pd.qcut(test_mgl_y, 5, labels = range(5))})
+    # mgl_y = pd.DataFrame({'value': mgl_y, 'category': pd.qcut(mgl_y, 5, labels = range(5))})
     
-    return(test_mgl,
-           test_mgl_fingerprints, 
-           test_mgl_y)
+    return(mgl,
+           mgl_fingerprints, 
+           mgl_y)
 
 
-def test_ppm_load(path):
-    test_ppm = pd.read_excel(path + 'test_ppm.xlsx', sheet_name = 'Sheet1')
+def binary_ppm_load(data_type, path):
+    ppm = pd.read_excel(path + data_type + '_ppm.xlsx', sheet_name = 'Sheet1')
+
+    ppm_drop_idx, ppm_fingerprints = Smiles2Fing(ppm.SMILES)
+    ppm_y_ = ppm.value.drop(ppm_drop_idx).reset_index(drop = True)
     
-    ppm_drop_idx, test_ppm_fingerprints = Smiles2Fing(test_ppm.SMILES)
-    test_ppm_y = test_ppm.value.drop(ppm_drop_idx).reset_index(drop = True)
-    
-    test_ppm_y = pd.DataFrame(
-        {'value': test_ppm_y,
-         'category': pd.cut(test_ppm_y,
-                            bins = [0, 100, 500, 2500, 20000, np.infty], 
-                            labels = range(5))}
+    ppm_y = pd.DataFrame(
+        {'value': ppm_y_,
+         'category': pd.cut(ppm_y_,
+                            bins = [0, 100, np.infty], 
+                            labels = range(2))}
         )
-    # ppm_y = pd.DataFrame({'value': test_ppm_y, 'category': pd.qcut(test_ppm_y, 5, labels = range(5))})
+    # ppm_y = pd.DataFrame({'value': ppm_y, 'category': pd.qcut(ppm_y, 5, labels = range(5))})
     
-    return(test_ppm,
-           test_ppm_fingerprints,
-           test_ppm_y)
+    return(ppm,
+           ppm_fingerprints,
+           ppm_y)
+
+
+# def train_mgl_load(path):
+#     train_mgl = pd.read_excel(path + 'train_mgl.xlsx', sheet_name = 'Sheet1')
+    
+#     # smiles to fingerprints
+#     mgl_drop_idx, train_mgl_fingerprints = Smiles2Fing(train_mgl.SMILES)
+#     train_mgl_y = train_mgl.value.drop(mgl_drop_idx).reset_index(drop = True)
+    
+#     # LC50 데이터의 범주 구성
+#     train_mgl_y = pd.DataFrame(
+#         {'value': train_mgl_y,
+#          'category': pd.cut(train_mgl_y, 
+#                             bins = [0, 0.5, 2.0, 10, 20, np.infty], 
+#                             labels = range(5))}
+#         )
+#     # quantile 기준으로 범주 구성
+#     # mgl_y = pd.DataFrame({'value': mgl_y, 'category': pd.qcut(mgl_y, 5, labels = range(5))})
+    
+#     return(train_mgl,
+#            train_mgl_fingerprints, 
+#            train_mgl_y)
+
+
+# def train_ppm_load(path):
+#     train_ppm = pd.read_excel(path + 'train_ppm.xlsx', sheet_name = 'Sheet1')
+
+#     ppm_drop_idx, train_ppm_fingerprints = Smiles2Fing(train_ppm.SMILES)
+#     train_ppm_y = train_ppm.value.drop(ppm_drop_idx).reset_index(drop = True)
+    
+#     train_ppm_y = pd.DataFrame(
+#         {'value': train_ppm_y,
+#          'category': pd.cut(train_ppm_y,
+#                             bins = [0, 100, 500, 2500, 20000, np.infty], 
+#                             labels = range(5))}
+#         )
+#     # ppm_y = pd.DataFrame({'value': ppm_y, 'category': pd.qcut(ppm_y, 5, labels = range(5))})
+    
+#     return(train_ppm,
+#            train_ppm_fingerprints,
+#            train_ppm_y)
+
+
+
+# def test_mgl_load(path):
+#     # mg/l
+#     test_mgl = pd.read_excel(path + 'test_mgl.xlsx', sheet_name = 'Sheet1')
+    
+#     # smiles to fingerprints
+#     mgl_drop_idx, test_mgl_fingerprints = Smiles2Fing(test_mgl.SMILES)
+#     test_mgl_y = test_mgl.value.drop(mgl_drop_idx).reset_index(drop = True)
+    
+#     # LC50 데이터의 범주 구성
+#     test_mgl_y = pd.DataFrame(
+#         {'value': test_mgl_y,
+#          'category': pd.cut(test_mgl_y, 
+#                             bins = [0, 0.5, 2.0, 10, 20, np.infty], 
+#                             labels = range(5))}
+#         )
+#     # quantile 기준으로 범주 구성
+#     # mgl_y = pd.DataFrame({'value': test_mgl_y, 'category': pd.qcut(test_mgl_y, 5, labels = range(5))})
+    
+#     return(test_mgl,
+#            test_mgl_fingerprints, 
+#            test_mgl_y)
+
+
+# def test_ppm_load(path):
+#     test_ppm = pd.read_excel(path + 'test_ppm.xlsx', sheet_name = 'Sheet1')
+    
+#     ppm_drop_idx, test_ppm_fingerprints = Smiles2Fing(test_ppm.SMILES)
+#     test_ppm_y = test_ppm.value.drop(ppm_drop_idx).reset_index(drop = True)
+    
+#     test_ppm_y = pd.DataFrame(
+#         {'value': test_ppm_y,
+#          'category': pd.cut(test_ppm_y,
+#                             bins = [0, 100, 500, 2500, 20000, np.infty], 
+#                             labels = range(5))}
+#         )
+#     # ppm_y = pd.DataFrame({'value': test_ppm_y, 'category': pd.qcut(test_ppm_y, 5, labels = range(5))})
+    
+#     return(test_ppm,
+#            test_ppm_fingerprints,
+#            test_ppm_y)
 
 
 def ParameterGrid(param_dict):
