@@ -88,7 +88,7 @@ def binary_mgl_load(data_type, path):
         {'value': mgl_y_,
          'category': pd.cut(mgl_y_, 
                             bins = [0, 0.5, np.infty], 
-                            labels = range(2))}
+                            labels = [1, -1])}
         )
     # quantile 기준으로 범주 구성
     # mgl_y = pd.DataFrame({'value': mgl_y, 'category': pd.qcut(mgl_y, 5, labels = range(5))})
@@ -108,7 +108,7 @@ def binary_ppm_load(data_type, path):
         {'value': ppm_y_,
          'category': pd.cut(ppm_y_,
                             bins = [0, 100, np.infty], 
-                            labels = range(2))}
+                            labels = [1, -1])}
         )
     # ppm_y = pd.DataFrame({'value': ppm_y, 'category': pd.qcut(ppm_y, 5, labels = range(5))})
     
