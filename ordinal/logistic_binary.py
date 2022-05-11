@@ -35,18 +35,40 @@ tf.debugging.set_log_device_placement(False)
 
 #%%
 path = 'C:/Users/SOYOUNG/Desktop/github/LC50/data/'
-train_mgl, train_mgl_fingerprints, train_mgl_y = binary_mgl_load('train', path) 
-train_ppm, train_ppm_fingerprints, train_ppm_y = binary_ppm_load('train', path)
+train_mgl, mgl_fingerprints, mgl_y = binary_mgl_load('train', path) 
+train_ppm, ppm_fingerprints, ppm_y = binary_ppm_load('train', path)
 
 print('train 범주에 포함된 데이터의 수\n', 
-      train_mgl_y['category'].value_counts().sort_index(),
+      mgl_y['category'].value_counts().sort_index(),
       '\n비율\n', 
-      train_mgl_y['category'].value_counts(normalize = True).sort_index())
+      mgl_y['category'].value_counts(normalize = True).sort_index())
 
 print('train 범주에 포함된 데이터의 수\n', 
-      train_ppm_y['category'].value_counts().sort_index(),
+      ppm_y['category'].value_counts().sort_index(),
       '\n비율\n', 
-      train_ppm_y['category'].value_counts(normalize = True).sort_index())
+      ppm_y['category'].value_counts(normalize = True).sort_index())
+
+
+#%%
+mgl_val_idx = random.sample(list(mgl_y.index), int(len(mgl_y) * 0.1))
+mgl_train_idx =  list(set(mgl_y.index) - set(mgl_val_idx))
+
+train_mgl_fingerprints = mgl_fingerprints.iloc[mgl_train_idx].reset_index(drop = True)
+train_mgl_y = mgl_y.iloc[mgl_train_idx].reset_index(drop = True)
+
+val_mgl_fingeprints = mgl_fingerprints.iloc[mgl_val_idx].reset_index(drop = True)
+val_mgl_y = mgl_y.iloc[mgl_val_idx].reset_index(drop = True)
+
+
+#%%
+ppm_val_idx = random.sample(list(ppm_y.index), int(len(ppm_y) * 0.1))
+ppm_train_idx =  list(set(ppm_y.index) - set(ppm_val_idx))
+
+train_ppm_fingerprints = ppm_fingerprints.iloc[ppm_train_idx].reset_index(drop = True)
+train_ppm_y = ppm_y.iloc[ppm_train_idx].reset_index(drop = True)
+
+val_ppm_fingeprints = ppm_fingerprints.iloc[ppm_val_idx].reset_index(drop = True)
+val_ppm_y = ppm_y.iloc[ppm_val_idx].reset_index(drop = True)
 
 
 #%%
@@ -54,13 +76,13 @@ test_mgl, test_mgl_fingerprints, test_mgl_y = binary_mgl_load('test', path)
 test_ppm, test_ppm_fingerprints, test_ppm_y = binary_ppm_load('test', path)
 
 print('test 범주에 포함된 데이터의 수\n', 
-      test_mgl_y['category'].value_counts().sort_index(),
+      mgl_y['category'].value_counts().sort_index(),
       '\n비율\n', 
-      test_mgl_y['category'].value_counts(normalize = True).sort_index())
+      mgl_y['category'].value_counts(normalize = True).sort_index())
 print('test 범주에 포함된 데이터의 수\n', 
-      test_ppm_y['category'].value_counts().sort_index(),
+      ppm_y['category'].value_counts().sort_index(),
       '\n비율\n', 
-      test_ppm_y['category'].value_counts(normalize = True).sort_index())
+      ppm_y['category'].value_counts(normalize = True).sort_index())
 
 
 #%%
@@ -127,8 +149,6 @@ print('\n', classification_report(test_mgl_y.category, mgl_logit_pred, digits = 
 '''
     weighted logistic regression with mg/l data
 '''
-# alpha = tf.Variable(tf.random.uniform((1, 1)))
-
 class WeightedLogitLoss(K.losses.Loss):
     def __init__(self, alpha):
         super(WeightedLogitLoss, self).__init__()
@@ -168,9 +188,11 @@ class WeightedLogit(K.Model):
 
 #%%
 train_mgl_x = tf.cast(train_mgl_fingerprints, tf.float32)
+val_mgl_x = tf.cast(val_mgl_fingeprints, tf.float32)
 test_mgl_x = tf.cast(test_mgl_fingerprints, tf.float32)
 
 mgl_train_y = tf.cast(train_mgl_y.category, tf.float32)[..., tf.newaxis]
+mgl_val_y = tf.cast(val_mgl_y.category, tf.float32)[..., tf.newaxis]
 mgl_test_y = tf.cast(test_mgl_y.category, tf.float32)[..., tf.newaxis]
 
 
@@ -178,9 +200,9 @@ mgl_test_y = tf.cast(test_mgl_y.category, tf.float32)[..., tf.newaxis]
 lr = 0.001
 adam = K.optimizers.Adam(lr)
 
-epochs = 1500
+epochs = 3000
 result_ = []
-alpha = np.linspace(1e-6, 10, 250)
+alpha = np.linspace(1e-6, 10, 150)
 
 
 for alpha_ in alpha:
@@ -203,16 +225,16 @@ for alpha_ in alpha:
         
         num_epochs.set_postfix({'alpha': alpha_})
     
-    mgl_weight_pred_prob = wlogit(test_mgl_x)
-    mgl_weight_pred = pd.Series([1 if i >= 0.5 else -1 for i in mgl_weight_pred_prob])
+    val_pred_prob = wlogit(val_mgl_x)
+    val_pred = pd.Series([1 if i >= 0.5 else -1 for i in val_pred_prob])
     
     result_.append({
         'alpha': alpha_,
         'loss': loss,
-        'recall': recall_score(mgl_test_y, mgl_weight_pred),
-        'auc': roc_auc_score(mgl_test_y, mgl_weight_pred),
-        'pred_prob': mgl_weight_pred_prob,
-        'pred': mgl_weight_pred
+        'recall': recall_score(mgl_val_y, val_pred),
+        'auc': roc_auc_score(mgl_val_y, val_pred),
+        'pred_prob': val_pred,
+        'pred': val_pred
     })
     
     
@@ -222,15 +244,16 @@ for alpha_ in alpha:
 weight_result = pd.DataFrame(result_)
 
 mgl_max_idx = weight_result.auc.argmax(axis = 0)
+mgl_max_idx = weight_result.recall.argmax(axis = 0)
 weight_result.iloc[mgl_max_idx]
 
 # plt.plot(weight_result.loss[mgl_max_idx])
 # plt.show()
 # plt.close()
 
-print('test results: \n', pd.crosstab(test_mgl_y.category, weight_result.pred[mgl_max_idx], rownames = ['true'], colnames = ['pred']))
-print("\nauc = ", roc_auc_score(test_mgl_y.category, weight_result.pred[mgl_max_idx]))
-print('\n', classification_report(test_mgl_y.category, weight_result.pred[mgl_max_idx], digits = 5))
+print('test results: \n', pd.crosstab(val_mgl_y.category, weight_result.pred[mgl_max_idx], rownames = ['true'], colnames = ['pred']))
+print("\nauc = ", roc_auc_score(val_mgl_y.category, weight_result.pred[mgl_max_idx]))
+print('\n', classification_report(val_mgl_y.category, weight_result.pred[mgl_max_idx], digits = 5))
 
 
 
@@ -263,6 +286,9 @@ mgl_weight_pred = pd.Series([1 if i >= 0.5 else -1 for i in mgl_weight_pred_prob
 print('test results: \n', pd.crosstab(test_mgl_y.category, mgl_weight_pred, rownames = ['true'], colnames = ['pred']))
 print("\nauc = ", roc_auc_score(test_mgl_y.category, mgl_weight_pred))
 print('\n', classification_report(test_mgl_y.category, mgl_weight_pred, digits = 5))
+
+
+
 
 
 #%%
@@ -322,29 +348,114 @@ print("\nkendall's tau = ", stats.kendalltau(test_ppm_y.category, ppm_logit_pred
 print('\n', classification_report(test_ppm_y.category, ppm_logit_pred, digits = 5))
 
 
+
+
 #%%
 '''
       weighted logistic regression with mg/l data
 '''
+train_ppm_x = tf.cast(train_ppm_fingerprints, tf.float32)
+val_ppm_x = tf.cast(val_ppm_fingeprints, tf.float32)
+test_ppm_x = tf.cast(test_ppm_fingerprints, tf.float32)
+
+ppm_train_y = tf.cast(train_ppm_y.category, tf.float32)[..., tf.newaxis]
+ppm_val_y = tf.cast(val_ppm_y.category, tf.float32)[..., tf.newaxis]
+ppm_test_y = tf.cast(test_ppm_y.category, tf.float32)[..., tf.newaxis]
 
 
 #%%
-'''
-      ppm binary
-'''
-ppm_binary = pd.DataFrame({
-   'y': [0 if i != 1 else 1 for i in test_ppm_y.category],
-   'logit_pred': [0 if i != 1 else 1 for i in ppm_logit_pred],
-   'ord_pred': [0 if i != 1 else 1 for i in ppm_ord_pred],
-})
+lr = 0.001
+adam = K.optimizers.Adam(lr)
+
+epochs = 3000
+ppm_result_ = []
+alpha = np.linspace(1e-6, 10, 150)
 
 
-print(pd.crosstab(ppm_binary.y, ppm_binary.logit_pred, rownames = ['true'], colnames = ['pred']))
-print('cohens kappa = ', cohen_kappa_score(ppm_binary.y, ppm_binary.logit_pred))
-print('auc = ', roc_auc_score(ppm_binary.y, ppm_binary.logit_pred))
-print(classification_report(ppm_binary.y, ppm_binary.logit_pred, digits = 5))
+for alpha_ in alpha:
+    tf.random.set_seed(0)
+    
+    wlogit = WeightedLogit()
+    logitloss = WeightedLogitLoss(alpha_)
+    loss = []
+    
+    num_epochs = tqdm(range(epochs), file = sys.stdout)
+    
+    for i in num_epochs:
+        with tf.GradientTape(persistent=True) as tape:
+            prob = wlogit(train_ppm_x)
+            loss_ = logitloss(ppm_train_y, prob) 
+        
+        grad = tape.gradient(loss_, wlogit.trainable_weights)
+        adam.apply_gradients(zip(grad, wlogit.trainable_weights))
+        loss.append(loss_.numpy())
+        
+        num_epochs.set_postfix({'alpha': alpha_})
+    
+    val_pred_prob = wlogit(val_ppm_x)
+    val_pred = pd.Series([1 if i >= 0.5 else -1 for i in val_pred_prob])
+    
+    ppm_result_.append({
+        'alpha': alpha_,
+        'loss': loss,
+        'recall': recall_score(ppm_val_y, val_pred),
+        'auc': roc_auc_score(ppm_val_y, val_pred),
+        'pred_prob': val_pred,
+        'pred': val_pred
+    })
+    
+    
 
-print(pd.crosstab(ppm_binary.y, ppm_binary.ord_pred, rownames = ['true'], colnames = ['pred']))
-print('cohens kappa = ', cohen_kappa_score(ppm_binary.y, ppm_binary.ord_pred))
-print('auc = ', roc_auc_score(ppm_binary.y, ppm_binary.ord_pred))
-print(classification_report(ppm_binary.y, ppm_binary.ord_pred, digits = 5))
+
+#%%
+ppm_weight_result = pd.DataFrame(ppm_result_)
+
+ppm_max_idx = ppm_weight_result.auc.argmax(axis = 0)
+ppm_max_idx = ppm_weight_result.recall.argmax(axis = 0)
+ppm_weight_result.iloc[ppm_max_idx]
+
+# plt.plot(weight_result.loss[mgl_max_idx])
+# plt.show()
+# plt.close()
+
+print('test results: \n', 
+      pd.crosstab(val_ppm_y.category, ppm_weight_result.pred[mgl_max_idx], 
+                  rownames = ['true'], colnames = ['pred']))
+print("\nauc = ", roc_auc_score(val_ppm_y.category, 
+                                ppm_weight_result.pred[ppm_max_idx]))
+print('\n', classification_report(val_ppm_y.category, 
+                                  ppm_weight_result.pred[ppm_max_idx], digits = 5))
+
+
+
+#%%
+tf.random.set_seed(0)
+
+ppm_weight_model = WeightedLogit()
+ppm_loss_func = WeightedLogitLoss(weight_result.alpha[ppm_max_idx])
+ppm_loss = []
+
+for i in tqdm(range(epochs)):
+      with tf.GradientTape(persistent=True) as tape:
+            prob = mgl_weight_model(train_ppm_x)
+            loss_ = mgl_loss_func(ppm_train_y, prob) 
+            
+      grad = tape.gradient(loss_, ppm_weight_model.trainable_weights)
+      adam.apply_gradients(zip(grad, ppm_weight_model.trainable_weights))
+      ppm_loss.append(loss_.numpy())
+
+
+#%%
+plt.plot(ppm_loss)
+plt.show()
+plt.close()
+
+
+ppm_weight_pred_prob = ppm_weight_model.predict(test_ppm_x)
+ppm_weight_pred = pd.Series([1 if i >= 0.5 else -1 for i in ppm_weight_pred_prob])
+
+print('test results: \n', pd.crosstab(test_ppm_y.category, 
+                                      ppm_weight_pred, rownames = ['true'], 
+                                      colnames = ['pred']))
+print("\nauc = ", roc_auc_score(test_ppm_y.category, ppm_weight_pred))
+print('\n', classification_report(test_ppm_y.category, ppm_weight_pred, digits = 5))
