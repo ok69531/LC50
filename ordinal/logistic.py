@@ -21,8 +21,8 @@ warnings.filterwarnings("ignore")
 
 #%%
 path = 'C:/Users/SOYOUNG/Desktop/github/LC50/data/'
-train_mgl, train_mgl_fingerprints, train_mgl_y = train_mgl_load(path) 
-train_ppm, train_ppm_fingerprints, train_ppm_y = train_ppm_load(path)
+train_mgl, train_mgl_fingerprints, train_mgl_y = mgl_load('train', path) 
+train_ppm, train_ppm_fingerprints, train_ppm_y = ppm_load('train', path)
 
 # print('train mgl')
 # print('기초통계량:\n', train_mgl['value'].describe())
@@ -43,8 +43,8 @@ print('train 범주에 포함된 데이터의 수\n',
 
 
 #%%
-test_mgl, test_mgl_fingerprints, test_mgl_y = test_mgl_load(path)
-test_ppm, test_ppm_fingerprints, test_ppm_y = test_ppm_load(path)
+test_mgl, test_mgl_fingerprints, test_mgl_y = mgl_load('test', path)
+test_ppm, test_ppm_fingerprints, test_ppm_y = ppm_load('test', path)
 
 # print('\ntest mgl')
 # print('기초통계량:\n', test_mgl['value'].describe())
@@ -80,7 +80,7 @@ params = ParameterGrid(params_dict)
 
 
 #%%
-mgl_logit_result = CV(
+mgl_logit_result = MultiCV(
       train_mgl_fingerprints, 
       train_mgl_y, 
       LogisticRegression,
@@ -232,7 +232,7 @@ class LogitOrdinalClassifier(BaseEstimator, ClassifierMixin):
 
 
 #%%
-mgl_ord_result = CV(
+mgl_ord_result = MultiCV(
       train_mgl_fingerprints, 
       train_mgl_y, 
       LogitOrdinalClassifier,
@@ -267,7 +267,7 @@ print(classification_report(test_mgl_y.category, mgl_ord_pred, digits = 5))
 '''
       Logistic Regression with ppm data
 '''
-ppm_logit_result = CV(
+ppm_logit_result = MultiCV(
       train_ppm_fingerprints, 
       train_ppm_y, 
       LogisticRegression,
@@ -324,7 +324,7 @@ print('\n', classification_report(test_ppm_y.category, ppm_logit_pred, digits = 
 '''
       Ordinal Logistic Regression with ppm data
 '''
-ppm_ord_result = CV(
+ppm_ord_result = MultiCV(
       train_ppm_fingerprints, 
       train_ppm_y, 
       LogitOrdinalClassifier,
