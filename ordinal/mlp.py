@@ -32,11 +32,11 @@ tf.debugging.set_log_device_placement(False)
 
 #%%
 path = 'C:/Users/SOYOUNG/Desktop/github/LC50/data/'
-train_mgl, train_mgl_fingerprints, train_mgl_y = train_mgl_load(path) 
-train_ppm, train_ppm_fingerprints, train_ppm_y = train_ppm_load(path)
+train_mgl, train_mgl_fingerprints, train_mgl_y = mgl_load('train', path) 
+train_ppm, train_ppm_fingerprints, train_ppm_y = ppm_load('train', path)
 
-test_mgl, test_mgl_fingerprints, test_mgl_y = test_mgl_load(path)
-test_ppm, test_ppm_fingerprints, test_ppm_y = test_ppm_load(path)
+test_mgl, test_mgl_fingerprints, test_mgl_y = mgl_load('test', path)
+test_ppm, test_ppm_fingerprints, test_ppm_y = ppm_load('test', path)
 
 
 #%%
@@ -254,11 +254,14 @@ print('kendall tau: ', stats.kendalltau(ppm_test_y, ppm_mlp_pred3),
 tf.random.set_seed(0)
 ppm_ord_model = ord_model()
 
-adam = K.optimizers.Adam(0.001)
+adam = K.optimizers.Adam(0.0005)
 scc = K.losses.SparseCategoricalCrossentropy()
 
 ppm_ord_model.compile(optimizer = adam, loss = scc, metrics = ['accuracy'])
 ppm_ord_result = ppm_ord_model.fit(train_ppm_x, ppm_train_y, epochs = 1000, batch_size = len(ppm_train_y), verbose = 1)
+# epochs = 10000
+# lr = 0.0005, epochs = 10000
+# lr = 0.0001, epochs = 5000
 
 
 #%%
@@ -271,7 +274,6 @@ print('kendall tau: ', stats.kendalltau(ppm_test_y, ppm_ord_pred),
       '\n', classification_report(ppm_test_y, ppm_ord_pred, digits = 5))
 
 
-#%%
 #%%
 '''
       mg/l binary
@@ -302,15 +304,15 @@ print(classification_report(mgl_binary.y, mgl_binary.ord_pred, digits = 5))
 '''
 ppm_binary = pd.DataFrame({
    'y': [0 if i != 1 else 1 for i in test_ppm_y.category],
-   'logit_pred': [0 if i != 1 else 1 for i in ppm_logit_pred],
+   'mlp_pred': [0 if i != 1 else 1 for i in ppm_mlp_pred3],
    'ord_pred': [0 if i != 1 else 1 for i in ppm_ord_pred],
 })
 
 
-print(pd.crosstab(ppm_binary.y, ppm_binary.logit_pred, rownames = ['true'], colnames = ['pred']))
-print('cohens kappa = ', cohen_kappa_score(ppm_binary.y, ppm_binary.logit_pred))
-print('auc = ', roc_auc_score(ppm_binary.y, ppm_binary.logit_pred))
-print(classification_report(ppm_binary.y, ppm_binary.logit_pred, digits = 5))
+print(pd.crosstab(ppm_binary.y, ppm_binary.mlp_pred, rownames = ['true'], colnames = ['pred']))
+print('cohens kappa = ', cohen_kappa_score(ppm_binary.y, ppm_binary.mlp_pred))
+print('auc = ', roc_auc_score(ppm_binary.y, ppm_binary.mlp_pred))
+print(classification_report(ppm_binary.y, ppm_binary.mlp_pred, digits = 5))
 
 print(pd.crosstab(ppm_binary.y, ppm_binary.ord_pred, rownames = ['true'], colnames = ['pred']))
 print('cohens kappa = ', cohen_kappa_score(ppm_binary.y, ppm_binary.ord_pred))
