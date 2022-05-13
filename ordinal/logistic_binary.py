@@ -681,3 +681,38 @@ ppm_logit_pred = ppm_logit.predict(test_ppm_fingerprints)
 print('test results: \n', pd.crosstab(test_ppm_y.category, ppm_logit_pred, rownames = ['true'], colnames = ['pred']))
 print("\nauc = ", roc_auc_score(test_ppm_y.category, ppm_logit_pred))
 print('\n', classification_report(test_ppm_y.category, ppm_logit_pred, digits = 5))
+
+
+
+#%%
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, roc_auc_score
+
+
+p = []
+r = []
+f1 = []
+acc = []
+auc = []
+
+for i in range(10):
+      ppm_logit = LogisticRegression(
+            penalty = 'l1',
+            C = 3,
+            solver = 'saga'
+            )
+      
+      ppm_logit.fit(train_ppm_fingerprints, train_ppm_y.category)
+      ppm_logit_pred = ppm_logit.predict(test_ppm_fingerprints)
+
+      p.append(precision_score(test_ppm_y.category, ppm_logit_pred))
+      r.append(recall_score(test_ppm_y.category, ppm_logit_pred))
+      f1.append(f1_score(test_ppm_y.category, ppm_logit_pred))
+      acc.append(accuracy_score(test_ppm_y.category, ppm_logit_pred))
+      auc.append(roc_auc_score(test_ppm_y.category, ppm_logit_pred))
+      
+
+np.mean(p)
+np.mean(r)
+np.mean(f1)
+np.mean(acc)
+np.mean(auc)

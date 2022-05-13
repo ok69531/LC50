@@ -4,15 +4,33 @@ import pandas as pd
 import numpy as np
 
 from tqdm import tqdm
-from rdkit import Chem
-from rdkit.Chem import MACCSkeys
+
+try: 
+    from rdkit import Chem
+    from rdkit.Chem import MACCSkeys
+    
+except:
+    import sys
+    import subprocess
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "rdkit-pypi"])
+    # subprocess.check_call([sys.executable, "-m", "conda", "install", "rdkit", "-c conda-forge"])
+    
+    from rdkit import Chem
+    from rdkit.Chem import MACCSkeys
+
 
 from itertools import product
 from collections.abc import Iterable
 
 import scipy.stats as stats
-from sklearn.model_selection import KFold
-from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, roc_auc_score
+from sklearn.model_selection import KFold, StratifiedShuffleSplit
+from sklearn.metrics import (
+    precision_score, 
+    recall_score, 
+    f1_score, 
+    accuracy_score, 
+    roc_auc_score
+    )
 
 
 def Smiles2Fing(smiles):
@@ -35,8 +53,8 @@ def Smiles2Fing(smiles):
     return ms_none_idx, fingerprints
 
 
-def mgl_load(data_type, path):
-    mgl = pd.read_excel(path + data_type + '_mgl.xlsx', sheet_name = 'Sheet1')
+def mgl_load(path):
+    mgl = pd.read_excel(path + 'mgl.xlsx', sheet_name = 'Sheet1')
     
     # smiles to fingerprints
     mgl_drop_idx, mgl_fingerprints = Smiles2Fing(mgl.SMILES)
@@ -57,8 +75,8 @@ def mgl_load(data_type, path):
            mgl_y)
 
 
-def ppm_load(data_type, path):
-    ppm = pd.read_excel(path + data_type + '_ppm.xlsx', sheet_name = 'Sheet1')
+def ppm_load(path):
+    ppm = pd.read_excel(path + 'ppm.xlsx', sheet_name = 'Sheet1')
 
     ppm_drop_idx, ppm_fingerprints = Smiles2Fing(ppm.SMILES)
     ppm_y_ = ppm.value.drop(ppm_drop_idx).reset_index(drop = True)
@@ -76,30 +94,26 @@ def ppm_load(data_type, path):
            ppm_y)
 
 
-def binary_mgl_load(data_type, path):
-    mgl = pd.read_excel(path + data_type + '_mgl.xlsx', sheet_name = 'Sheet1')
+def binary_mgl_load(path):
+    mgl = pd.read_excel(path + 'mgl.xlsx', sheet_name = 'Sheet1')
     
-    # smiles to fingerprints
     mgl_drop_idx, mgl_fingerprints = Smiles2Fing(mgl.SMILES)
     mgl_y_ = mgl.value.drop(mgl_drop_idx).reset_index(drop = True)
     
-    # LC50 데이터의 범주 구성
     mgl_y = pd.DataFrame(
         {'value': mgl_y_,
          'category': pd.cut(mgl_y_, 
                             bins = [0, 0.5, np.infty], 
                             labels = [1, -1])}
         )
-    # quantile 기준으로 범주 구성
-    # mgl_y = pd.DataFrame({'value': mgl_y, 'category': pd.qcut(mgl_y, 5, labels = range(5))})
     
     return(mgl,
            mgl_fingerprints, 
            mgl_y)
 
 
-def binary_ppm_load(data_type, path):
-    ppm = pd.read_excel(path + data_type + '_ppm.xlsx', sheet_name = 'Sheet1')
+def binary_ppm_load(path):
+    ppm = pd.read_excel(path + 'ppm.xlsx', sheet_name = 'Sheet1')
 
     ppm_drop_idx, ppm_fingerprints = Smiles2Fing(ppm.SMILES)
     ppm_y_ = ppm.value.drop(ppm_drop_idx).reset_index(drop = True)
@@ -110,95 +124,22 @@ def binary_ppm_load(data_type, path):
                             bins = [0, 100, np.infty], 
                             labels = [1, -1])}
         )
-    # ppm_y = pd.DataFrame({'value': ppm_y, 'category': pd.qcut(ppm_y, 5, labels = range(5))})
     
     return(ppm,
            ppm_fingerprints,
            ppm_y)
 
 
-# def train_mgl_load(path):
-#     train_mgl = pd.read_excel(path + 'train_mgl.xlsx', sheet_name = 'Sheet1')
+def data_split(X, y, seed):
+    sss = StratifiedShuffleSplit(n_splits = 1, test_size = 0.2, random_state = seed)
     
-#     # smiles to fingerprints
-#     mgl_drop_idx, train_mgl_fingerprints = Smiles2Fing(train_mgl.SMILES)
-#     train_mgl_y = train_mgl.value.drop(mgl_drop_idx).reset_index(drop = True)
+    for train_idx, test_idx in sss.split(X, y):
+        train_x = X.iloc[train_idx].reset_index(drop = True)
+        train_y = y.iloc[train_idx].reset_index(drop = True)
+        test_x = X.iloc[test_idx].reset_index(drop = True)
+        test_y = y.iloc[test_idx].reset_index(drop = True)
     
-#     # LC50 데이터의 범주 구성
-#     train_mgl_y = pd.DataFrame(
-#         {'value': train_mgl_y,
-#          'category': pd.cut(train_mgl_y, 
-#                             bins = [0, 0.5, 2.0, 10, 20, np.infty], 
-#                             labels = range(5))}
-#         )
-#     # quantile 기준으로 범주 구성
-#     # mgl_y = pd.DataFrame({'value': mgl_y, 'category': pd.qcut(mgl_y, 5, labels = range(5))})
-    
-#     return(train_mgl,
-#            train_mgl_fingerprints, 
-#            train_mgl_y)
-
-
-# def train_ppm_load(path):
-#     train_ppm = pd.read_excel(path + 'train_ppm.xlsx', sheet_name = 'Sheet1')
-
-#     ppm_drop_idx, train_ppm_fingerprints = Smiles2Fing(train_ppm.SMILES)
-#     train_ppm_y = train_ppm.value.drop(ppm_drop_idx).reset_index(drop = True)
-    
-#     train_ppm_y = pd.DataFrame(
-#         {'value': train_ppm_y,
-#          'category': pd.cut(train_ppm_y,
-#                             bins = [0, 100, 500, 2500, 20000, np.infty], 
-#                             labels = range(5))}
-#         )
-#     # ppm_y = pd.DataFrame({'value': ppm_y, 'category': pd.qcut(ppm_y, 5, labels = range(5))})
-    
-#     return(train_ppm,
-#            train_ppm_fingerprints,
-#            train_ppm_y)
-
-
-
-# def test_mgl_load(path):
-#     # mg/l
-#     test_mgl = pd.read_excel(path + 'test_mgl.xlsx', sheet_name = 'Sheet1')
-    
-#     # smiles to fingerprints
-#     mgl_drop_idx, test_mgl_fingerprints = Smiles2Fing(test_mgl.SMILES)
-#     test_mgl_y = test_mgl.value.drop(mgl_drop_idx).reset_index(drop = True)
-    
-#     # LC50 데이터의 범주 구성
-#     test_mgl_y = pd.DataFrame(
-#         {'value': test_mgl_y,
-#          'category': pd.cut(test_mgl_y, 
-#                             bins = [0, 0.5, 2.0, 10, 20, np.infty], 
-#                             labels = range(5))}
-#         )
-#     # quantile 기준으로 범주 구성
-#     # mgl_y = pd.DataFrame({'value': test_mgl_y, 'category': pd.qcut(test_mgl_y, 5, labels = range(5))})
-    
-#     return(test_mgl,
-#            test_mgl_fingerprints, 
-#            test_mgl_y)
-
-
-# def test_ppm_load(path):
-#     test_ppm = pd.read_excel(path + 'test_ppm.xlsx', sheet_name = 'Sheet1')
-    
-#     ppm_drop_idx, test_ppm_fingerprints = Smiles2Fing(test_ppm.SMILES)
-#     test_ppm_y = test_ppm.value.drop(ppm_drop_idx).reset_index(drop = True)
-    
-#     test_ppm_y = pd.DataFrame(
-#         {'value': test_ppm_y,
-#          'category': pd.cut(test_ppm_y,
-#                             bins = [0, 100, 500, 2500, 20000, np.infty], 
-#                             labels = range(5))}
-#         )
-#     # ppm_y = pd.DataFrame({'value': test_ppm_y, 'category': pd.qcut(test_ppm_y, 5, labels = range(5))})
-    
-#     return(test_ppm,
-#            test_ppm_fingerprints,
-#            test_ppm_y)
+    return train_x, train_y, test_x, test_y
 
 
 def ParameterGrid(param_dict):
@@ -219,7 +160,6 @@ def ParameterGrid(param_dict):
         params_grid.append(dict(zip(keys, v))) 
     
     return params_grid
-
 
 
 def MultiCV(x, y, model, params_grid):
@@ -297,13 +237,11 @@ def MultiCV(x, y, model, params_grid):
 
 
 
-
-
 def BinaryCV(x, y, model, params_grid):
     kf = KFold(n_splits = 5)
     
     result_ = []
-    metrics = ['macro_precision',, 'macro_recall', 'macro_f1', 
+    metrics = ['macro_precision', 'macro_recall', 'macro_f1', 
                'accuracy', 'tau', 'auc']
     
     train_metrics = list(map(lambda x: 'train_' + x, metrics))
@@ -313,14 +251,12 @@ def BinaryCV(x, y, model, params_grid):
         train_macro_precision_, train_weighted_precision_ = [], []
         train_macro_recall_, train_weighted_recall_ = [], []
         train_macro_f1_, train_weighted_f1_ = [], []
-        train_accuracy_, train_tau_ = [], []
-        train_auc_ = []
+        train_accuracy_, train_auc_ = [], []
         
         val_macro_precision_, val_weighted_precision_ = [], []
         val_macro_recall_, val_weighted_recall_ = [], []
         val_macro_f1_, val_weighted_f1_ = [], []
-        val_accuracy_, val_tau_ = [], []
-        val_auc_ = []
+        val_accuracy_, val_auc_ = [], []
         
         for train_idx, val_idx in kf.split(x):
             train_x, train_y = x.iloc[train_idx], y.iloc[train_idx]

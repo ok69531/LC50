@@ -254,7 +254,7 @@ print('kendall tau: ', stats.kendalltau(ppm_test_y, ppm_mlp_pred3),
 tf.random.set_seed(0)
 ppm_ord_model = ord_model()
 
-adam = K.optimizers.Adam(0.0005)
+adam = K.optimizers.Adam(0.0001)
 scc = K.losses.SparseCategoricalCrossentropy()
 
 ppm_ord_model.compile(optimizer = adam, loss = scc, metrics = ['accuracy'])
@@ -319,3 +319,42 @@ print('cohens kappa = ', cohen_kappa_score(ppm_binary.y, ppm_binary.ord_pred))
 print('auc = ', roc_auc_score(ppm_binary.y, ppm_binary.ord_pred))
 print(classification_report(ppm_binary.y, ppm_binary.ord_pred, digits = 5))
 
+
+
+
+
+#%%
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, roc_auc_score
+
+binary_ppm_y = [0 if i != 1 else 1 for i in test_ppm_y.category]
+
+p = []
+r = []
+f1 = []
+acc = []
+auc = []
+
+for i in range(10):
+    ppm_model3 = model3()
+    
+    adam = K.optimizers.Adam(0.001)
+    scc = K.losses.SparseCategoricalCrossentropy()
+    
+    ppm_model3.compile(optimizer = adam, loss = scc, metrics = ['accuracy'])
+    ppm_model3.fit(train_ppm_x, ppm_train_y, epochs = 1000, batch_size = len(ppm_train_y), verbose = 1)
+
+    ppm_mlp_prob3 = ppm_model3.predict(test_ppm_x)
+    ppm_mlp_pred3 = np.argmax(ppm_mlp_prob3, axis = 1)
+    
+    p.append(precision_score(binary_ppm_y, ppm_ord_pred))
+    r.append(recall_score(binary_ppm_y, ppm_ord_pred))
+    f1.append(f1_score(binary_ppm_y, ppm_ord_pred))
+    acc.append(accuracy_score(binary_ppm_y, ppm_ord_pred))
+    auc.append(roc_auc_score(binary_ppm_y, ppm_ord_pred))
+      
+
+np.mean(p)
+np.mean(r)
+np.mean(f1)
+np.mean(acc)
+np.mean(auc)
