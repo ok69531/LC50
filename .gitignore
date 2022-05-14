@@ -9,3 +9,5 @@ __pycache__/
 .cache
 .pytest_cache
 .DS_Store
+wandb
+.neptune
