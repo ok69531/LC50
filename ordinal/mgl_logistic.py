@@ -38,14 +38,13 @@ except:
       subprocess.check_call([sys.executable, "-m", "pip", "install", "wandb"])
       import wandb
 
-
 warnings.filterwarnings("ignore")
 
-wandb.login(key="1c2f31977d15e796871c32701e62c5ec1167070e")
 wandb.init(project="LC50-mgl-logistic", entity="soyoung")
 
 
 def mgl_logit_main(seed_):
+      
       path = 'C:/Users/SOYOUNG/Desktop/github/LC50/data/'
 
       mgl, mgl_fingerprints, mgl_y = mgl_load(path)
@@ -70,28 +69,6 @@ def mgl_logit_main(seed_):
       #       '\n비율\n', test_mgl_y.value_counts(normalize = True).sort_index())
 
 
-      ppm, ppm_fingerprints, ppm_y = ppm_load(path)
-      train_ppm_fingerprints, train_ppm_y, test_ppm_fingerprints, test_ppm_y = data_split(
-            ppm_fingerprints, 
-            ppm_y.category,
-            seed = seed_
-      )
-
-
-      # print('ppm', 
-      #       '\n기초통계량:\n', ppm.value.describe(),
-      #       '\n분위수: ', np.quantile(ppm.value, [0.2, 0.4, 0.6, 0.8, 1]))
-
-      # print('범주에 포함된 데이터의 수\n', ppm_y.category.value_counts().sort_index(),
-      #       '\n비율\n', ppm_y.category.value_counts(normalize = True).sort_index())
-
-      # print('train 범주에 포함된 데이터의 수\n', train_ppm_y.value_counts().sort_index(),
-      #       '\n비율\n', train_ppm_y.value_counts(normalize = True).sort_index())
-
-      # print('test 범주에 포함된 데이터의 수\n', test_ppm_y.value_counts().sort_index(),
-      #       '\n비율\n', test_ppm_y.value_counts(normalize = True).sort_index())
-
-
       '''
             Logistic Regression with mg/l data
       '''
@@ -104,7 +81,7 @@ def mgl_logit_main(seed_):
             'solver': ['liblinear', 'saga']
             }
 
-      params = ParameterGrid(params_dict)
+      params = ParameterGrid(params_dict)[100:105]
 
       mgl_logit_result = MultiCV(
             train_mgl_fingerprints, 
@@ -120,8 +97,7 @@ def mgl_logit_main(seed_):
       logit.fit(train_mgl_fingerprints, train_mgl_y)
       mgl_logit_pred = logit.predict(test_mgl_fingerprints)
       
-
-      result = pd.DataFrame([{
+      result_ = {
             'seed': seed_,
             'parameters': best_params,
             'precision': precision_score(test_mgl_y, mgl_logit_pred, average = 'macro'), 
@@ -129,17 +105,24 @@ def mgl_logit_main(seed_):
             'f1': f1_score(test_mgl_y, mgl_logit_pred, average = 'macro'), 
             'accuracy': accuracy_score(test_mgl_y, mgl_logit_pred),
             'tau': stats.kendalltau(test_mgl_y, mgl_logit_pred).correlation
-      }])
-
+      }
+            
 
       wandb.log({
-            'table': result
-      })
+            'seed': seed_,
+            'parameters': best_params,
+            'precision': precision_score(test_mgl_y, mgl_logit_pred, average = 'macro'), 
+            'recall': recall_score(test_mgl_y, mgl_logit_pred, average = 'macro'), 
+            'f1': f1_score(test_mgl_y, mgl_logit_pred, average = 'macro'), 
+            'accuracy': accuracy_score(test_mgl_y, mgl_logit_pred),
+            'tau': stats.kendalltau(test_mgl_y, mgl_logit_pred).correlation
+            })
+      
       
       
       # run = neptune.init(
       # project="ok69531/LC50-mgl-logistic",
-      # api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJmOGQxYzY2YS02MmVjLTQ3MDUtOTlmNS0xYWYyODY3ZmE2MzYifQ==",
+      # api_token="my_api_token",
       # ) 
       
       # run['parameters'] = best_params
@@ -150,3 +133,13 @@ def mgl_logit_main(seed_):
       # run['tau'] = stats.kendalltau(test_mgl_y, mgl_logit_pred).correlation
       
       # run.stop()
+      
+      return result_
+
+
+result = []
+for seed_ in range(50, 55):
+      result.append(mgl_logit_main(seed_))
+      
+pd.DataFrame(result).to_csv('test_result/ex.csv', header = True, index = False)
+wandb.finish()
