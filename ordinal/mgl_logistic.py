@@ -81,7 +81,7 @@ def mgl_logit_main(seed_):
             'solver': ['liblinear', 'saga']
             }
 
-      params = ParameterGrid(params_dict)[100:105]
+      params = ParameterGrid(params_dict)
 
       mgl_logit_result = MultiCV(
             train_mgl_fingerprints, 
