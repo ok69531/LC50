@@ -41,6 +41,7 @@ except:
 
 warnings.filterwarnings("ignore")
 
+wandb.login(key="1c2f31977d15e796871c32701e62c5ec1167070e")
 wandb.init(project="LC50-mgl-logistic", entity="soyoung")
 
 
