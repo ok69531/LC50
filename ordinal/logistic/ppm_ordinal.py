@@ -2,15 +2,15 @@
 import sys
 sys.path.append('../')
 
-from utils import (
+from util import (
       Smiles2Fing,
       mgl_load,
       ppm_load, 
       data_split,
       ParameterGrid,
-      MultiCV
+      MultiCV, 
+      OrdinalLogitClassifier
 )
-from models import OrdinalLogitClassifier
 
 import time
 import random

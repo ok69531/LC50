@@ -2,7 +2,7 @@
 import sys
 sys.path.append('../')
 
-from utils import (
+from util import (
       Smiles2Fing,
       mgl_load,
       ppm_load, 
