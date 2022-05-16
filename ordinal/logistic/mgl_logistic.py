@@ -7,7 +7,6 @@ from utils import (
       ParameterGrid,
       MultiCV
 )
-from models import OrdinalLogitClassifier
 
 import time
 import random
@@ -40,6 +39,7 @@ except:
 
 warnings.filterwarnings("ignore")
 
+wandb.api('1c2f31977d15e796871c32701e62c5ec1167070e')
 wandb.init(project="LC50-mgl-logistic", entity="soyoung")
 
 
@@ -141,5 +141,5 @@ result = []
 for seed_ in range(200):
       result.append(mgl_logit_main(seed_))
       
-pd.DataFrame(result).to_csv('test_result/ex.csv', header = True, index = False)
+pd.DataFrame(result).to_csv('test_result/mgl_logit.csv', header = True, index = False)
 wandb.finish()
