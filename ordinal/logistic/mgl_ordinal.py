@@ -1,4 +1,7 @@
 #%%
+import sys
+sys.path.append('../')
+
 from utils import (
       Smiles2Fing,
       mgl_load,
@@ -7,6 +10,7 @@ from utils import (
       ParameterGrid,
       MultiCV
 )
+
 from models import OrdinalLogitClassifier
 
 import time
