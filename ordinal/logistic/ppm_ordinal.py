@@ -50,7 +50,8 @@ wandb.init(project="LC50-ppm-ordinal", entity="soyoung")
     
 
 def ppm_ordinal_main(seed_):
-    path = 'C:/Users/SOYOUNG/Desktop/github/LC50/data/'
+    
+    path = '../../data/'
     
     ppm, ppm_fingerprints, ppm_y = ppm_load(path)
     train_ppm_fingerprints, train_ppm_y, test_ppm_fingerprints, test_ppm_y = data_split(

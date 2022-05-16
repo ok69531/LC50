@@ -51,7 +51,7 @@ wandb.init(project="LC50-mgl-ordinal", entity="soyoung")
 
 def mgl_ordinal_main(seed_):
       
-      path = 'C:/Users/SOYOUNG/Desktop/github/LC50/data/'
+      path = '../../data/'
 
       mgl, mgl_fingerprints, mgl_y = mgl_load(path)
       train_mgl_fingerprints, train_mgl_y, test_mgl_fingerprints, test_mgl_y = data_split(
