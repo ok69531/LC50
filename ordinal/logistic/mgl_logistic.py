@@ -1,4 +1,7 @@
 #%%
+import sys
+sys.path.append('../')
+
 from utils import (
       Smiles2Fing,
       mgl_load,
