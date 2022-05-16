@@ -128,5 +128,5 @@ result = []
 for seed_ in range(200):
       result.append(ppm_logit_main(seed_))
       
-pd.DataFrame(result).to_csv('test_result/ppm_logit.csv', header = True, index = False)
+pd.DataFrame(result).to_csv('../test_result/ppm_logit.csv', header = True, index = False)
 wandb.finish()
