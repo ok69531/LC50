@@ -42,7 +42,7 @@ except:
 
 warnings.filterwarnings("ignore")
 
-wandb.api('1c2f31977d15e796871c32701e62c5ec1167070e')
+wandb.login(key="1c2f31977d15e796871c32701e62c5ec1167070e")
 wandb.init(project="LC50-mgl-logistic", entity="soyoung")
 
 
@@ -80,7 +80,7 @@ def mgl_logit_main(seed_):
             'random_state': [seed_], 
             'penalty': ['l1', 'l2'],
             # 'C': np.logspace(-10, 10, num = 100, base = 2),
-            'C': np.linspace(1e-6, 50, 150),
+            'C': np.linspace(1e-6, 50, 100),
             'solver': ['liblinear', 'saga']
             }
 

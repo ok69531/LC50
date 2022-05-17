@@ -82,7 +82,7 @@ def mgl_ordinal_main(seed_):
       params_dict = {
             'random_state': [seed_], 
             'penalty': ['l1', 'l2'],
-            'C': np.linspace(1e-6, 50, 150),
+            'C': np.linspace(1e-6, 50, 100),
             'solver': ['liblinear', 'saga']
             }
 
