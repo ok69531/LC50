@@ -80,7 +80,7 @@ def mgl_ordrf_main(seed_):
           'max_features': ['auto', 'sqrt', 'log2']
           }
 
-      params = ParameterGrid(params_dict)[:3]
+      params = ParameterGrid(params_dict)
 
       mgl_ordrf_result = MultiCV(
             train_mgl_fingerprints, 
