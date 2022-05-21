@@ -77,11 +77,10 @@ def mgl_ordrf_main(seed_):
           'random_state': [seed_], 
           'n_estimators': np.arange(30, 155, 10),
           'min_samples_split': list(range(2, 9)),
-          'max_features': ['auto', 'sqrt', 'log2'],
-          'class_weight': [None, {0:1.3, 1:2, 2:5.3, 3:0.6, 4:0.8}]
+          'max_features': ['auto', 'sqrt', 'log2']
           }
 
-      params = ParameterGrid(params_dict)
+      params = ParameterGrid(params_dict)[:3]
 
       mgl_ordrf_result = MultiCV(
             train_mgl_fingerprints, 
