@@ -88,7 +88,7 @@ def mgl_rf_main(seed_):
       )
 
       max_tau_idx = mgl_rf_result.val_tau.argmax(axis = 0)
-      best_params = mgl_rf_result.iloc[max_tau_idx][:4].to_dict()
+      best_params = mgl_rf_result.iloc[max_tau_idx][:5].to_dict()
 
       rf = RandomForestClassifier(**best_params)
       rf.fit(train_mgl_fingerprints, train_mgl_y)
