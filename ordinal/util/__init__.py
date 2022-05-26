@@ -16,6 +16,8 @@ from .models import (
     model1,
     model3,
     model5,
+    ordinal,
+    ord_model,
     Logit,
     WeightedLogitLoss,
     ridge,
