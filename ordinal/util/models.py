@@ -218,6 +218,41 @@ class model5(K.Model):
         return yhat
 
 
+class ordinal(layers.Layer):
+    def __init__(self, num_class):
+        super(ordinal, self).__init__()
+        self.num_class = num_class
+        self.theta = tf.Variable(tf.cumsum(tf.random.uniform((1, num_class - 1)), axis = 1))
+        self.dense = layers.Dense(1)
+        
+    def call(self, inputs):
+        x = tf.expand_dims(self.theta, 0) - self.dense(inputs)
+        cum_prob = tf.squeeze(tf.nn.sigmoid(x))
+        prob = tf.concat([
+            cum_prob[:, :1], 
+            cum_prob[:, 1:] - cum_prob[:, :-1],
+            1 - cum_prob[:, -1:]], axis = 1)
+        
+        return prob
+
+
+class ord_model(K.Model):
+    def __init__(self):
+        super(ord_model, self).__init__()
+        self.dense1 = layers.Dense(100, activation = 'relu')
+        self.dense2 = layers.Dense(50, activation = 'tanh')
+        # self.dense3 = layers.Dense(5, activation = 'relu')
+        self.dense3 = ordinal(5)
+    
+    def call(self, inputs):
+        h1 = self.dense1(inputs)
+        h2 = self.dense2(h1)
+        # h3 = self.dense3(h2)
+        yhat = self.dense3(h2)
+        
+        return yhat
+
+
 class Logit(K.Model):
     def __init__(self):
         super(Logit, self).__init__()
