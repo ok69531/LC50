@@ -13,3 +13,7 @@ wandb
 .neptune
 SLURM*
 .sh
+logistic.py
+logistic_binary.py
+mlp.py
+rf.py
