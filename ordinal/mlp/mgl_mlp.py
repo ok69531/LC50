@@ -20,8 +20,7 @@ from sklearn.metrics import (
     precision_score, 
     recall_score, 
     f1_score, 
-    accuracy_score, 
-    roc_auc_score
+    accuracy_score
     )
 from sklearn.model_selection import StratifiedKFold
 
@@ -160,7 +159,7 @@ def main(seed_):
     
     params_dict = {
         'learning_rate': [0.01, 0.001],
-        'epochs': [1000, 10000, 25000]
+        'epochs': [1000, 10000, 20000]
     }
     params_grid = ParameterGrid(params_dict)
     
