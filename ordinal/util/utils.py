@@ -53,6 +53,26 @@ def Smiles2Fing(smiles):
     return ms_none_idx, fingerprints
 
 
+def data_load(path):
+    df = pd.read_excel('../../data/lc50.xlsx')
+    
+    drop_idx, fingerprints = Smiles2Fing(df.SMILES)
+    y_ = df.value.drop(drop_idx).reset_index(drop = True)
+    
+    y = pd.DataFrame({
+        'value': y_,
+        'category': pd.cut(y_,
+                           bins = [0, 0.5, 2.0, 10, 20, np.infty],
+                           labels = range(5))
+    })
+    
+    return (
+        df,
+        fingerprints,
+        y
+    )
+
+
 def mgl_load(path):
     mgl = pd.read_excel(path + 'mgl.xlsx', sheet_name = 'Sheet1')
     
