@@ -53,7 +53,7 @@ def Smiles2Fing(smiles):
     return ms_none_idx, fingerprints
 
 
-def data_load(path):
+def data_load():
     df = pd.read_excel('../../data/lc50.xlsx')
     
     drop_idx, fingerprints = Smiles2Fing(df.SMILES)
