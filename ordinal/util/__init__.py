@@ -1,5 +1,6 @@
 from .utils import (
     Smiles2Fing,
+    data_load,
     mgl_load,
     ppm_load,
     binary_mgl_load,
