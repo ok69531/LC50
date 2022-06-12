@@ -23,7 +23,7 @@ from itertools import product
 from collections.abc import Iterable
 
 import scipy.stats as stats
-from sklearn.model_selection import KFold, StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 from sklearn.metrics import (
     precision_score, 
     recall_score, 
@@ -183,7 +183,7 @@ def ParameterGrid(param_dict):
 
 
 def MultiCV(x, y, model, params_grid):
-    kf = KFold(n_splits = 5)
+    skf = StratifiedKFold(n_splits = 5)
     
     result_ = []
     metrics = ['macro_precision', 'weighted_precision', 'macro_recall', 
@@ -204,7 +204,7 @@ def MultiCV(x, y, model, params_grid):
         val_macro_f1_, val_weighted_f1_ = [], []
         val_accuracy_, val_tau_ = [], []
         
-        for train_idx, val_idx in kf.split(x):
+        for train_idx, val_idx in skf.split(x):
             train_x, train_y = x.iloc[train_idx], y.iloc[train_idx]
             val_x, val_y = x.iloc[val_idx], y.iloc[val_idx]
             
@@ -258,7 +258,7 @@ def MultiCV(x, y, model, params_grid):
 
 
 def BinaryCV(x, y, model, params_grid):
-    kf = KFold(n_splits = 5)
+    skf = StratifiedKFold(n_splits = 5)
     
     result_ = []
     metrics = ['macro_precision', 'macro_recall', 'macro_f1', 
@@ -278,7 +278,7 @@ def BinaryCV(x, y, model, params_grid):
         val_macro_f1_, val_weighted_f1_ = [], []
         val_accuracy_, val_auc_ = [], []
         
-        for train_idx, val_idx in kf.split(x):
+        for train_idx, val_idx in skf.split(x):
             train_x, train_y = x.iloc[train_idx], y.iloc[train_idx]
             val_x, val_y = x.iloc[val_idx], y.iloc[val_idx]
             
