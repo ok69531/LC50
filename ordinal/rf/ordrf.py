@@ -71,7 +71,7 @@ def rf_main(seed_):
     max_tau_idx = rf_result.val_tau.argmax(axis = 0)
     best_params = rf_result.iloc[max_tau_idx][:5].to_dict()
     
-    rf = random.Random(**best_params)
+    rf = OrdinalRFClassifier(**best_params)
     rf.fit(train_fingerprints, train_y)
     pred = rf.predict(test_fingerprints)
       
