@@ -204,7 +204,7 @@ def MultiCV(x, y, model, params_grid):
         val_macro_f1_, val_weighted_f1_ = [], []
         val_accuracy_, val_tau_ = [], []
         
-        for train_idx, val_idx in skf.split(x):
+        for train_idx, val_idx in skf.split(x, y):
             train_x, train_y = x.iloc[train_idx], y.iloc[train_idx]
             val_x, val_y = x.iloc[val_idx], y.iloc[val_idx]
             
@@ -280,7 +280,7 @@ def BinaryCV(x, y, model, params_grid):
         val_accuracy_ = []
         val_auc_ = []
         
-        for train_idx, val_idx in skf.split(x):
+        for train_idx, val_idx in skf.split(x, y):
             train_x, train_y = x.iloc[train_idx], y.iloc[train_idx]
             val_x, val_y = x.iloc[val_idx], y.iloc[val_idx]
             
