@@ -52,11 +52,10 @@ def rf_main(seed_):
 
     
     params_dict = {
-        'random_state': [seed_], 
-        'n_estimators': np.arange(30, 155, 10),
-        'min_samples_split': list(range(2, 9)),
-        'max_features': ['auto', 'sqrt', 'log2'],
-        'class_weight': [None, {0:1.6, 1:1.2, 2:2.7, 3:3.4, 4:1.1}]
+          'random_state': [seed_], 
+          'n_estimators': np.arange(30, 155, 10),
+          'min_samples_split': list(range(2, 9)),
+          'max_features': ['auto', 'sqrt', 'log2']
     }
 
     params = ParameterGrid(params_dict)
@@ -69,7 +68,7 @@ def rf_main(seed_):
     )
 
     max_tau_idx = rf_result.val_tau.argmax(axis = 0)
-    best_params = rf_result.iloc[max_tau_idx][:5].to_dict()
+    best_params = rf_result.iloc[max_tau_idx][:4].to_dict()
     
     rf = OrdinalRFClassifier(**best_params)
     rf.fit(train_fingerprints, train_y)
