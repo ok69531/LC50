@@ -23,7 +23,7 @@ from itertools import product
 from collections.abc import Iterable
 
 import scipy.stats as stats
-from sklearn.model_selection import KFold, StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 from sklearn.metrics import (
     precision_score, 
     recall_score, 
@@ -183,7 +183,7 @@ def ParameterGrid(param_dict):
 
 
 def MultiCV(x, y, model, params_grid):
-    kf = KFold(n_splits = 5)
+    skf = StratifiedKFold(n_splits = 5)
     
     result_ = []
     metrics = ['macro_precision', 'weighted_precision', 'macro_recall', 
@@ -204,7 +204,7 @@ def MultiCV(x, y, model, params_grid):
         val_macro_f1_, val_weighted_f1_ = [], []
         val_accuracy_, val_tau_ = [], []
         
-        for train_idx, val_idx in kf.split(x):
+        for train_idx, val_idx in skf.split(x):
             train_x, train_y = x.iloc[train_idx], y.iloc[train_idx]
             val_x, val_y = x.iloc[val_idx], y.iloc[val_idx]
             
@@ -258,7 +258,7 @@ def MultiCV(x, y, model, params_grid):
 
 
 def BinaryCV(x, y, model, params_grid):
-    kf = KFold(n_splits = 5)
+    skf = StratifiedKFold(n_splits = 5)
     
     result_ = []
     metrics = ['macro_precision', 'macro_recall', 'macro_f1', 
@@ -268,22 +268,27 @@ def BinaryCV(x, y, model, params_grid):
     val_metrics = list(map(lambda x: 'val_' + x, metrics))
     
     for i in tqdm(range(len(params_grid))):
-        train_macro_precision_, train_weighted_precision_ = [], []
-        train_macro_recall_, train_weighted_recall_ = [], []
-        train_macro_f1_, train_weighted_f1_ = [], []
-        train_accuracy_, train_auc_ = [], []
+        train_macro_precision_ = []
+        train_macro_recall_ = []
+        train_macro_f1_ = []
+        train_accuracy_  = []
+        train_auc_ = []
         
-        val_macro_precision_, val_weighted_precision_ = [], []
-        val_macro_recall_, val_weighted_recall_ = [], []
-        val_macro_f1_, val_weighted_f1_ = [], []
-        val_accuracy_, val_auc_ = [], []
+        val_macro_precision_ = []
+        val_macro_recall_ = []
+        val_macro_f1_ = []
+        val_accuracy_ = []
+        val_auc_ = []
         
-        for train_idx, val_idx in kf.split(x):
+        for train_idx, val_idx in skf.split(x):
             train_x, train_y = x.iloc[train_idx], y.iloc[train_idx]
             val_x, val_y = x.iloc[val_idx], y.iloc[val_idx]
             
             clf = model(**params_grid[i])
             clf.fit(train_x, train_y)
+            
+            train_pred_prob = clf.predict_proba(train_x)
+            val_pred_prob = clf.predict_proba(val_x)
             
             train_pred = clf.predict(train_x)
             val_pred = clf.predict(val_x)
@@ -291,13 +296,13 @@ def BinaryCV(x, y, model, params_grid):
             train_macro_precision_.append(precision_score(train_y, train_pred))
             train_macro_recall_.append(recall_score(train_y, train_pred))
             train_macro_f1_.append(f1_score(train_y, train_pred))
-            train_accuracy_.append(accuracy_score(train_y, train_pred))
+            train_accuracy_.append(accuracy_score(train_y, train_pred_prob))
             train_auc_.append(roc_auc_score(train_y, train_pred))
 
             val_macro_precision_.append(precision_score(val_y, val_pred))
             val_macro_recall_.append(recall_score(val_y, val_pred))
             val_macro_f1_.append(f1_score(val_y, val_pred))
-            val_accuracy_.append(accuracy_score(val_y, val_pred))
+            val_accuracy_.append(accuracy_score(val_y, val_pred_prob))
             val_auc_.append(roc_auc_score(val_y, val_pred))
             
         result_.append(dict(
