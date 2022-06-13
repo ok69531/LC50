@@ -189,7 +189,7 @@ def main(seed_):
     mlp_pred = np.argmax(mlp_pred_prob, axis = 1)
     
     scc = K.losses.SparseCategoricalCrossentropy()
-    train_loss = scc(train_y, model.predict(train_x)).numpy()
+    train_loss = scc(tf_train_y, model.predict(train_x)).numpy()
     test_loss = scc(tf_test_y, mlp_pred_prob).numpy()
       
     result_ = {
